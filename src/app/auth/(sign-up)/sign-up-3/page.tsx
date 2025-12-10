@@ -17,7 +17,7 @@ export default function SignUpPage() {
           Get special benefits and stay up-to-date.
         </>
       }
-      isSocialLoginActive={true}
+      isSocialLoginActive={false}
     >
       <SignUpForm />
     </AuthWrapperThree>

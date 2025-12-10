@@ -12,10 +12,6 @@ export const signUpSchema = z.object({
   email: validateEmail,
   password: validatePassword,
   passwordConfirm: validateConfirmPassword,
-  description: z.string().optional(),
-  address: z.string().optional(),
-  contact: z.string().optional(),
-  website: z.string().optional(),
   isAgreed: z.boolean(),
 });
 

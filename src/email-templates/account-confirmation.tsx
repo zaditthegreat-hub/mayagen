@@ -28,7 +28,7 @@ export default function VercelInviteUserEmail(
           <Section style={{ marginTop: '32px' }}>
             <Img
               src="https://isomorphic-furyroad.vercel.app/logo.svg"
-              alt="isomorphic furyroad logo"
+              alt="Mayagen logo"
               style={{
                 margin: '0 auto',
               }}

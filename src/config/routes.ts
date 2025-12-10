@@ -177,10 +177,25 @@ export const routes = {
   },
   users: {
     dashboard: '/users',
+    create: '/users/create',
+    edit: (id: string) => `/users/${id}/edit`,
+  },
+  guardrails: {
+    dashboard: '/guardrails',
+    create: '/guardrails/create',
+    edit: (id: string) => `/guardrails/${id}/edit`,
   },
   personaTemplates: {
     dashboard: '/persona-templates',
     create: '/persona-templates/create',
     edit: (id: string) => `/persona-templates/${id}/edit`,
+  },
+  personaList: {
+    dashboard: '/persona-list',
+    create: '/persona-list/create',
+    edit: (id: string) => `/persona-list/${id}/edit`,
+  },
+  subscriptions: {
+    dashboard: '/subscriptions',
   },
 };

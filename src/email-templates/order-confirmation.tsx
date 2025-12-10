@@ -61,7 +61,7 @@ export default function OrderConfirmationEmail(
               <Column>
                 <Img
                   src="https://isomorphic-furyroad.vercel.app/logo.svg"
-                  alt="isomorphic furyroad logo"
+                  alt="Mayagen logo"
                   style={{
                     margin: '0',
                   }}
@@ -234,7 +234,7 @@ export default function OrderConfirmationEmail(
           <Section style={paddingY}>
             <Img
               src="https://isomorphic-furyroad.vercel.app/logo.svg"
-              alt="isomorphic furyroad logo"
+              alt="Mayagen logo"
               style={{
                 margin: '12px auto 36px',
               }}

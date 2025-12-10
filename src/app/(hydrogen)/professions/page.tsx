@@ -1,4 +1,4 @@
-import ProfessionList from './profession-list';
+import ProfessionList from '@/app/shared/ecommerce/dashboard/profession-list';
 import { metaObject } from '@/config/site.config';
 
 export const metadata = {

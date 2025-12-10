@@ -15,7 +15,7 @@ export default function SignInPage() {
         </>
       }
       isSignIn
-      isSocialLoginActive={true}
+      isSocialLoginActive={false}
     >
       <SignInForm />
     </AuthWrapperFour>

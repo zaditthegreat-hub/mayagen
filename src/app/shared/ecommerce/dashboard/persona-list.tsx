@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Box } from 'rizzui/box';
 import { Button } from 'rizzui/button';
@@ -21,7 +21,7 @@ export default function PersonaList({ className }: { className?: string }) {
     const [personas, setPersonas] = useState<Persona[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchPersonas = async () => {
+    const fetchPersonas = useCallback(async () => {
         if (session?.accessToken) {
             setLoading(true);
             try {
@@ -43,11 +43,11 @@ export default function PersonaList({ className }: { className?: string }) {
                 setLoading(false);
             }
         }
-    };
+    }, [session]);
 
     useEffect(() => {
         fetchPersonas();
-    }, [session]);
+    }, [fetchPersonas]);
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this persona?')) {

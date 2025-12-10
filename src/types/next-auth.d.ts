@@ -4,6 +4,9 @@ declare module 'next-auth' {
     interface Session {
         user: {
             id: string;
+            role: string;
+            number?: string | null;
+            emailValidated?: boolean | null;
             // Add other user properties here if needed
         } & DefaultSession['user'];
         accessToken: string;
@@ -15,6 +18,9 @@ declare module 'next-auth' {
     interface User {
         id: string;
         email: string;
+        role: string;
+        number?: string | null;
+        emailValidated?: boolean | null;
         accessToken: string;
         refreshToken: string;
         expiresIn?: number; // Optional, if backend provides it
@@ -28,5 +34,6 @@ declare module 'next-auth/jwt' {
         expiresAt: number;
         error?: string;
         user?: any;
+        role: string;
     }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Box } from 'rizzui/box';
 import { Button } from 'rizzui/button';
@@ -21,7 +21,7 @@ export default function ProfessionList({ className }: { className?: string }) {
     const [professions, setProfessions] = useState<Profession[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchProfessions = async () => {
+    const fetchProfessions = useCallback(async () => {
         if (session?.accessToken) {
             setLoading(true);
             try {
@@ -33,7 +33,7 @@ export default function ProfessionList({ className }: { className?: string }) {
                 });
                 if (response.ok) {
                     const result = await response.json();
-                    setProfessions(result);
+                    setProfessions(result as Profession[]);
                 } else {
                     console.error('Failed to fetch professions');
                 }
@@ -43,11 +43,11 @@ export default function ProfessionList({ className }: { className?: string }) {
                 setLoading(false);
             }
         }
-    };
+    }, [session]);
 
     useEffect(() => {
         fetchProfessions();
-    }, [session]);
+    }, [fetchProfessions]);
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this profession?')) {
@@ -64,7 +64,7 @@ export default function ProfessionList({ className }: { className?: string }) {
                     toast.success('Profession deleted successfully');
                     fetchProfessions();
                 } else {
-                    const errorData = await response.json();
+                    const errorData = await response.json() as any;
                     toast.error(errorData.message || 'Failed to delete profession');
                 }
             } catch (error) {

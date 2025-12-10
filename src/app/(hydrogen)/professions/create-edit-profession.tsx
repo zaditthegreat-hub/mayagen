@@ -74,7 +74,7 @@ export default function CreateEditProfession({
                 onSuccess();
                 closeModal();
             } else {
-                const errorData = await response.json();
+                const errorData = await response.json() as any;
                 toast.error(errorData.message || `Failed to ${isEdit ? 'update' : 'create'} profession`);
             }
         } catch (error) {

@@ -163,7 +163,7 @@ export function AudioVisualizer({
       audioElement.removeEventListener('pause', handlePauseOrStop);
       audioElement.removeEventListener('ended', handlePauseOrStop);
     };
-  }, [theme, color, barWidth, barGap, barRadius, defaultBarColor]);
+  }, [audioElement, theme, color, barWidth, barGap, barRadius, defaultBarColor]);
 
   // Cleanup on unmount
   useEffect(() => {

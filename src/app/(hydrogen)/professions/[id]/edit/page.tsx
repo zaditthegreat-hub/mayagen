@@ -5,6 +5,7 @@ export const metadata = {
     ...metaObject('Edit Profession'),
 };
 
-export default function EditProfessionPage({ params }: { params: { id: string } }) {
-    return <CreateEditProfession id={params.id} />;
+export default async function EditProfessionPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    return <CreateEditProfession id={id} />;
 }

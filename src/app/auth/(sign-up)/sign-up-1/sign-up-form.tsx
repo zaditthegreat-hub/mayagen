@@ -102,44 +102,6 @@ export default function SignUpForm() {
               {...register('passwordConfirm')}
               error={errors.passwordConfirm?.message}
             />
-            <Textarea
-              label="Description"
-              placeholder="Deskripsikan usaha anda"
-              className="col-span-2 [&>label>span]:font-medium"
-              textareaClassName="text-sm"
-              {...register('description')}
-              error={errors.description?.message}
-            />
-            <Input
-              type="text"
-              size="lg"
-              label="Address"
-              placeholder="Enter your address"
-              className="col-span-2 [&>label>span]:font-medium"
-              inputClassName="text-sm"
-              {...register('address')}
-              error={errors.address?.message}
-            />
-            <Input
-              type="text"
-              size="lg"
-              label="Contact"
-              placeholder="Enter your contact number"
-              className="col-span-2 [&>label>span]:font-medium"
-              inputClassName="text-sm"
-              {...register('contact')}
-              error={errors.contact?.message}
-            />
-            <Input
-              type="text"
-              size="lg"
-              label="Website"
-              placeholder="Enter your website URL"
-              className="col-span-2 [&>label>span]:font-medium"
-              inputClassName="text-sm"
-              {...register('website')}
-              error={errors.website?.message}
-            />
             <div className="col-span-2 flex items-start">
               <Checkbox
                 {...register('isAgreed')}

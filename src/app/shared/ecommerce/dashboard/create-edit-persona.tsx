@@ -152,7 +152,7 @@ export default function CreateEditPersona({ id }: { id?: string }) {
             }
         };
         fetchPersona();
-    }, [id, session, reset]);
+    }, [id, session, reset, router]);
 
 
     const onSubmit: SubmitHandler<PersonaSchema> = async (data) => {

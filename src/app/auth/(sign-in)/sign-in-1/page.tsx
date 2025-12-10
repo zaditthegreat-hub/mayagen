@@ -26,7 +26,7 @@ export default function SignIn() {
       bannerTitle="The simplest way to manage your workspace."
       bannerDescription="Amet minim mollit non deserunt ullamco est sit aliqua dolor do
       amet sint velit officia consequat duis."
-      isSocialLoginActive={true}
+      isSocialLoginActive={false}
       pageImage={
         <div className="relative mx-auto aspect-[4/3.37] w-[500px] xl:w-[620px] 2xl:w-[820px]">
           <Image

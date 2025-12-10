@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { toCurrency } from '@core/utils/to-currency';
 import Link from 'next/link';
@@ -22,7 +22,7 @@ export default function PlanList({ className }: { className?: string }) {
     const [plans, setPlans] = useState<Plan[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchPlans = async () => {
+    const fetchPlans = useCallback(async () => {
         if (session?.accessToken) {
             setLoading(true);
             try {
@@ -44,11 +44,11 @@ export default function PlanList({ className }: { className?: string }) {
                 setLoading(false);
             }
         }
-    };
+    }, [session]);
 
     useEffect(() => {
         fetchPlans();
-    }, [session]);
+    }, [fetchPlans]);
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this plan?')) {

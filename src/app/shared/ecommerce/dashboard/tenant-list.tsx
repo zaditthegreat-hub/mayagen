@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Text, Title, Loader } from 'rizzui';
+import { Text, Title, Loader, ActionIcon } from 'rizzui';
 import cn from '@core/utils/class-names';
 import Table from '@core/components/table';
 import { useTanStackTable } from '@core/components/table/custom/use-TanStack-Table';
 import { createColumnHelper } from '@tanstack/react-table';
 import Link from 'next/link';
-import { ActionIcon } from 'rizzui';
 import { PiPencilSimpleBold } from 'react-icons/pi';
 import { routes } from '@/config/routes';
 

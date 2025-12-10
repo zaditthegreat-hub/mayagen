@@ -7,15 +7,20 @@ import { Title } from 'rizzui/typography';
 import { Collapse } from 'rizzui/collapse';
 import cn from '@core/utils/class-names';
 import { PiCaretDownBold } from 'react-icons/pi';
-import { menuItems } from '@/layouts/hydrogen/menu-items';
+import { useSession } from 'next-auth/react';
+import { adminMenuItems, tenantMenuItems } from '@/layouts/hydrogen/menu-items';
 import StatusBadge from '@core/components/get-status-badge';
 
 export function SidebarMenu() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userRole = (session?.user as any)?.role;
+  console.log('aaaaaaaaa' + userRole)
+  const items = userRole === 'TENANT' ? tenantMenuItems : adminMenuItems;
 
   return (
     <div className="mt-4 pb-3 3xl:mt-6">
-      {menuItems.map((item, index) => {
+      {items.map((item, index) => {
         const isActive = pathname === (item?.href as string);
         const pathnameExistInDropdowns: any = item?.dropdownItems?.filter(
           (dropdownItem) => dropdownItem.href === pathname

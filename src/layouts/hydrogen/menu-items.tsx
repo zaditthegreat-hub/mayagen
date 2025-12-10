@@ -61,7 +61,7 @@ import {
 } from 'react-icons/pi';
 
 // Note: do not add href in the label object, it is rendering as label
-export const menuItems = [
+export const adminMenuItems = [
   // label start
   {
     name: 'Overview',
@@ -97,4 +97,44 @@ export const menuItems = [
     href: routes.users.dashboard,
     icon: <PiUsersDuotone />,
   },
+  {
+    name: 'Guardrails',
+    href: routes.guardrails.dashboard,
+    icon: <PiShieldCheckDuotone />,
+  },
 ];
+
+export const tenantMenuItems = [
+  // label start
+  {
+    name: 'Overview',
+  },
+  // label end
+  {
+    name: 'Dashboard',
+    href: '/',
+    icon: <PiFolderDuotone />,
+  },
+  {
+    name: 'Daftar Persona',
+    href: routes.personaList.dashboard,
+    icon: <PiUserCircleDuotone />,
+  },
+  {
+    name: 'Subscriptions',
+    href: routes.subscriptions.dashboard,
+    icon: <PiClipboardTextDuotone />,
+  },
+  {
+    name: 'Users',
+    href: routes.users.dashboard,
+    icon: <PiUsersDuotone />,
+  },
+  {
+    name: 'Guardrails',
+    href: routes.guardrails.dashboard,
+    icon: <PiShieldCheckDuotone />,
+  },
+];
+
+export const menuItems = adminMenuItems; // Default fallback

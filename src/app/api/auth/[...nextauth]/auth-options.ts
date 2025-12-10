@@ -51,11 +51,15 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async session({ session, token }) {
+      console.log('Session callback - token:', token);
       return {
         ...session,
         user: {
           ...session.user,
           id: token.id as string,
+          role: token.role,
+          number: (token.user as any)?.number,
+          emailValidated: (token.user as any)?.emailValidated,
         },
         accessToken: token.accessToken,
         refreshToken: token.refreshToken,
@@ -71,6 +75,7 @@ export const authOptions: NextAuthOptions = {
           accessToken: (user as any).accessToken,
           refreshToken: (user as any).refreshToken,
           expiresAt: Date.now() + ((user as any).expiresIn ?? 3600) * 1000,
+          role: (user as any).role,
           user,
         };
       }
@@ -113,6 +118,30 @@ export const authOptions: NextAuthOptions = {
           console.log('Login response:', user);
 
           if (res.ok && user) {
+            // Fetch user profile details using the access token
+            try {
+              const profileRes = await fetch(`${apiUrl}/api/v1/admin/users/me`, {
+                headers: {
+                  Authorization: `Bearer ${(user as any).accessToken}`,
+                },
+              });
+
+              if (profileRes.ok) {
+                const profile = await profileRes.json();
+                console.log('User profile fetched:', profile);
+
+                // Merge profile data with user (token) data
+                return {
+                  ...user,
+                  ...profile, // This will overwrite any matching keys with profile data (e.g., role)
+                };
+              } else {
+                console.error('Failed to fetch user profile:', profileRes.status);
+              }
+            } catch (profileError) {
+              console.error('Error fetching user profile:', profileError);
+            }
+
             return user as any;
           }
           return null;
