@@ -1,0 +1,122 @@
+.main {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  justify-content: center;
+  place-content: center;
+  justify-items: center;
+  overflow: auto;
+  flex-grow: 1;
+}
+
+.tabContainer {
+  width: 100%;
+  max-width: 500px;
+  padding-inline: 2rem;
+}
+
+.tabSelect {
+  display: flex;
+  justify-content: stretch;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  margin: 0 auto 1.5rem;
+  border: 1px solid rgba(5, 5, 5, 0.15);
+  border-radius: 0.5rem;
+}
+
+.tabSelect * {
+  width: 100%;
+}
+
+.tabContent {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(5, 5, 5, 0.15);
+  border-radius: 0.5rem;
+}
+
+.lk-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .625rem 1rem;
+  color: rgba(255, 255, 255, 0.616);
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: inherit;
+  line-height: inherit;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+/* === GLOBAL STYLES (merged, no duplicates) === */
+.playgroundWrapper {
+  box-sizing: border-box;
+  color-scheme: dark;
+  background-color: white;
+  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.playgroundWrapper * {
+  box-sizing: border-box;
+}
+
+.header {
+  max-width: 500px;
+  padding-inline: 2rem;
+}
+
+.header>img {
+  display: block;
+  margin: auto;
+  max-width: 100%;
+}
+
+.header>h2 {
+  font-family: 'TWK Everett', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 144%;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footer {
+  width: 100%;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  background-color: var(--lk-bg);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.footer a,
+.header h2 a {
+  color: #ff6352;
+  text-decoration-color: #a33529;
+  text-underline-offset: 0.125em;
+}
+
+.footer a:hover,
+.header h2 a {
+  text-decoration-color: #ff6352;
+}
+
+.header h2 a {
+  text-decoration: none;
+}

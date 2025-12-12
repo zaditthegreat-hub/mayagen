@@ -50,6 +50,9 @@ export const routes = {
     dashboard: '/appointment',
     appointmentList: '/appointment/list',
   },
+  conversation: {
+    playground: '/playground',
+  },
   crm: {
     dashboard: '/crm',
   },

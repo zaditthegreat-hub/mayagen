@@ -1,5 +1,6 @@
 import { DUMMY_ID } from '@/config/constants';
 import { routes } from '@/config/routes';
+import DribbleIcon from '@core/components/icons/dribble';
 import {
   PiAirplaneTiltDuotone,
   PiApplePodcastsLogoDuotone,
@@ -22,6 +23,7 @@ import {
   PiCreditCardDuotone,
   PiCurrencyCircleDollarDuotone,
   PiCurrencyDollarDuotone,
+  PiDribbbleLogo,
   PiEnvelopeDuotone,
   PiEnvelopeSimpleOpenDuotone,
   PiFeatherDuotone,
@@ -102,6 +104,11 @@ export const adminMenuItems = [
     href: routes.guardrails.dashboard,
     icon: <PiShieldCheckDuotone />,
   },
+  {
+    name: 'Playground',
+    href: routes.conversation.playground,
+    icon: <PiDribbbleLogo />,
+  },
 ];
 
 export const tenantMenuItems = [
@@ -117,12 +124,12 @@ export const tenantMenuItems = [
   },
   {
     name: 'Daftar Persona',
-    href: routes.personaList.dashboard,
+    href: routes.personaTemplates.dashboard,
     icon: <PiUserCircleDuotone />,
   },
   {
     name: 'Subscriptions',
-    href: routes.subscriptions.dashboard,
+    href: routes.plans.dashboard,
     icon: <PiClipboardTextDuotone />,
   },
   {
@@ -134,6 +141,11 @@ export const tenantMenuItems = [
     name: 'Guardrails',
     href: routes.guardrails.dashboard,
     icon: <PiShieldCheckDuotone />,
+  },
+  {
+    name: 'Playground',
+    href: routes.conversation.playground,
+    icon: <PiDribbbleLogo />,
   },
 ];
 
