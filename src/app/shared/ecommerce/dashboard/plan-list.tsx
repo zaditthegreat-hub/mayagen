@@ -8,13 +8,22 @@ import { Box } from 'rizzui/box';
 import { Button } from 'rizzui/button';
 import { Flex } from 'rizzui/flex';
 import { Grid } from 'rizzui/grid';
-import { Text, Title, Loader, ActionIcon } from 'rizzui';
+import { Text, Title, Loader, ActionIcon, Badge } from 'rizzui';
 import cn from '@core/utils/class-names';
 import { PiPlusBold, PiTrashBold, PiPencilSimpleBold } from 'react-icons/pi';
 import { Plan } from './create-edit-plan';
 import toast from 'react-hot-toast';
 import { routes } from '@/config/routes';
 import { useRouter } from 'next/navigation';
+
+const BADGE_COLORS = [
+    'primary',
+    'secondary',
+    'success',
+    'warning',
+    'danger',
+    'info',
+] as const;
 
 export default function PlanList({ className }: { className?: string }) {
     const { data: session } = useSession();
@@ -121,6 +130,20 @@ function PlanItem({
     onEdit: () => void;
     onDelete: () => void;
 }) {
+    const getFeatureBadge = (key: string, value: any) => {
+        const stringValue = String(value).toLowerCase();
+        if (stringValue === 'true') {
+            return `${key} Available`;
+        }
+
+        // Check if it's a number (or string number)
+        if (!isNaN(Number(value))) {
+            return `${value} ${key}`;
+        }
+        // Fallback for other strings
+        return `${value} ${key}`;
+    };
+
     return (
         <Flex
             direction="col"
@@ -149,7 +172,22 @@ function PlanItem({
                 <Text className="text-sm text-gray-500 line-clamp-2">
                     {plan.description}
                 </Text>
-                <Flex align="end" justify="between" className="mt-auto flex-wrap">
+
+                {/* Features Badges */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                    {plan.features && Object.entries(plan.features).map(([key, value], index) => (
+                        <Badge
+                            key={key}
+                            variant="flat"
+                            color={BADGE_COLORS[index % BADGE_COLORS.length]}
+                            className="rounded-full px-3"
+                        >
+                            {getFeatureBadge(key, value)}
+                        </Badge>
+                    ))}
+                </div>
+
+                <Flex align="end" justify="between" className="mt-auto pt-4 flex-wrap">
                     <Flex direction="col" className="w-auto gap-y-2">
                         <Text as="span" className="text-xs">
                             Price:{' '}

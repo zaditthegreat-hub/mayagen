@@ -114,8 +114,17 @@ export const authOptions: NextAuthOptions = {
             headers: { 'Content-Type': 'application/json' },
           });
 
-          const user = await res.json();
-          console.log('Login response:', user);
+          const responseText = await res.text();
+          console.log('Login response status:', res.status);
+          console.log('Login response body:', responseText);
+
+          let user;
+          try {
+            user = responseText ? JSON.parse(responseText) : null;
+          } catch (parseError) {
+            console.error('JSON Parse error:', parseError);
+            return null;
+          }
 
           if (res.ok && user) {
             // Fetch user profile details using the access token

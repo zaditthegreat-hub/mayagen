@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import logoImg from '@public/logo-primary.svg';
-import logoImgText from '@public/logo-primary-text.svg';
+import logoImg from '@public/kediritechnopark-icon.png';
+import logoImgText from '@public/kediritechnopark-logo-text.png';
 import Image from 'next/image';
 import { Button, Title, Text } from 'rizzui';
 import { PiAppleLogoFill, PiArrowLeftBold } from 'react-icons/pi';
@@ -65,7 +65,6 @@ export default function AuthWrapperOne({
                 href={'/'}
                 className="mb-6 inline-flex max-w-[168px] xl:mb-8"
               >
-                <Image src={logoImg} alt="Isomorphic" />
                 <Image
                   src={logoImgText}
                   alt="Isomorphic"

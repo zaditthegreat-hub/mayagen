@@ -1,6 +1,6 @@
 'use client';
 
-import logoImg from '@public/logo-short.svg';
+import logoImg from '@public/kediritechnopark-icon.png';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Title } from 'rizzui';

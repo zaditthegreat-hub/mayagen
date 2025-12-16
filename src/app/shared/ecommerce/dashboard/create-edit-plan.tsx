@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { SubmitHandler, Controller, useForm } from 'react-hook-form';
-import { Input, Button, Title, Text, Select, Checkbox, Textarea, Loader } from 'rizzui';
+import { SubmitHandler, Controller, useForm, useFieldArray } from 'react-hook-form';
+import { Input, Button, Title, Text, Select, Checkbox, Textarea, Loader, ActionIcon } from 'rizzui';
+import { PiPlusBold, PiTrashBold } from 'react-icons/pi';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/config/routes';
+import cn from '@core/utils/class-names';
 
 // Define the plan type based on the API response
 export type Plan = {
@@ -31,6 +33,12 @@ const planSchema = z.object({
     priceCents: z.coerce.number().min(0, 'Price must be 0 or greater'),
     currency: z.string().min(1, 'Currency is required'),
     active: z.boolean(),
+    featuresList: z.array(
+        z.object({
+            key: z.string().min(1, 'Feature name is required'),
+            value: z.string().min(1, 'Feature value is required'),
+        })
+    ),
 });
 
 type PlanSchema = z.infer<typeof planSchema>;
@@ -68,7 +76,13 @@ export default function CreateEditPlan({ id }: { id?: string }) {
             priceCents: 0,
             currency: 'IDR',
             active: true,
+            featuresList: [{ key: '', value: '' }],
         },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: 'featuresList',
     });
 
     useEffect(() => {
@@ -91,6 +105,14 @@ export default function CreateEditPlan({ id }: { id?: string }) {
 
                         setPlanId(planData.id); // Store the real ID for updates
 
+                        // Transform features object to array
+                        const featuresList = planData.features
+                            ? Object.entries(planData.features).map(([key, value]) => ({
+                                key,
+                                value: String(value), // Ensure value is string
+                            }))
+                            : [{ key: '', value: '' }];
+
                         reset({
                             code: planData.code,
                             name: planData.name,
@@ -99,6 +121,7 @@ export default function CreateEditPlan({ id }: { id?: string }) {
                             priceCents: planData.priceCents,
                             currency: planData.currency,
                             active: planData.active,
+                            featuresList,
                         });
                     } else {
                         toast.error('Failed to fetch plan details');
@@ -127,17 +150,23 @@ export default function CreateEditPlan({ id }: { id?: string }) {
                 : `${apiUrl}/api/v1/admin/plans`;
             const method = isEdit ? 'PUT' : 'POST';
 
+            // Transform featuresList array back to object
+            const features = data.featuresList.reduce((acc, curr) => {
+                if (curr.key) {
+                    acc[curr.key] = curr.value;
+                }
+                return acc;
+            }, {} as Record<string, any>);
+
             // Prepare payload
             const payload = {
                 ...data,
-                features: {
-                    "Website Widget": true,
-                    "Channel": 2,
-                    "Webchat": true,
-                    "Human Agent": "Unlimited",
-                    "AI Agent": "Unlimited"
-                }, // Default features for now
+                features,
             };
+
+            // Remove featuresList from payload as it's not part of the API schema
+            // @ts-ignore
+            delete payload.featuresList;
 
             const response = await fetch(url, {
                 method,
@@ -239,6 +268,43 @@ export default function CreateEditPlan({ id }: { id?: string }) {
                     {...register('priceCents')}
                     error={errors.priceCents?.message}
                 />
+
+                <div className="rounded-md border border-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <Text className="font-semibold text-gray-900">Features</Text>
+                        <Button size="sm" variant="outline" onClick={() => append({ key: '', value: '' })}>
+                            <PiPlusBold className="mr-1" /> Add Feature
+                        </Button>
+                    </div>
+                    <div className="space-y-3">
+                        {fields.map((field, index) => (
+                            <div key={field.id} className="flex gap-3 items-start p-3 bg-gray-50 rounded-md">
+                                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <Input
+                                        label={index === 0 ? "Feature Name" : undefined}
+                                        placeholder="e.g. Website Widget"
+                                        {...register(`featuresList.${index}.key` as const)}
+                                        error={errors.featuresList?.[index]?.key?.message}
+                                    />
+                                    <Input
+                                        label={index === 0 ? "Value" : undefined}
+                                        placeholder="e.g. true"
+                                        {...register(`featuresList.${index}.value` as const)}
+                                        error={errors.featuresList?.[index]?.value?.message}
+                                    />
+                                </div>
+                                <ActionIcon
+                                    variant="text"
+                                    color="danger"
+                                    onClick={() => remove(index)}
+                                    className={cn("mt-1", index === 0 && "mt-8")}
+                                >
+                                    <PiTrashBold className="w-5 h-5" />
+                                </ActionIcon>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
                 <Controller
                     name="active"
