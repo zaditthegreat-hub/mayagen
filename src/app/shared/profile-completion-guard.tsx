@@ -19,7 +19,7 @@ export default function ProfileCompletionGuard({ children }: { children: React.R
         }
 
         if (!session.user.emailValidated) {
-            const isEmailSkipped = sessionStorage.getItem('skip_email_validation') === 'true';
+            const isEmailSkipped = localStorage.getItem('skip_email_validation') === 'true';
             if (!isEmailSkipped && pathname !== '/validate-email') {
                 router.replace('/validate-email');
                 return;
@@ -27,7 +27,7 @@ export default function ProfileCompletionGuard({ children }: { children: React.R
         }
 
         if (!session.user.number) {
-            const isPhoneSkipped = sessionStorage.getItem('skip_phone_validation') === 'true';
+            const isPhoneSkipped = localStorage.getItem('skip_phone_validation') === 'true';
             if (!isPhoneSkipped && pathname !== '/validate-number') {
                 router.replace('/validate-number');
                 return;

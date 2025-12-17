@@ -27,7 +27,7 @@ export default function OtpForm() {
     };
 
     const handleSkip = () => {
-        sessionStorage.setItem('skip_phone_validation', 'true');
+        localStorage.setItem('skip_phone_validation', 'true');
         router.push('/');
     };
 

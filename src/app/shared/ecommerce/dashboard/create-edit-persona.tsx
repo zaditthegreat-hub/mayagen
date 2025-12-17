@@ -7,9 +7,11 @@ import { Input, Button, Title, Text, Checkbox, Textarea, Select, ActionIcon } fr
 import { PiPlusBold, PiTrashBold } from 'react-icons/pi';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { routes } from '@/config/routes';
 import cn from '@core/utils/class-names';
+
+import PlaygroundBanner from './playground-banner';
 
 // Define the persona type based on the API response
 export type Persona = {
@@ -49,6 +51,9 @@ type PersonaSchema = z.infer<typeof personaSchema>;
 export default function CreateEditPersona({ id }: { id?: string }) {
     const { data: session } = useSession();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const professionCodeParam = searchParams.get('professionCode');
+
     const [isLoading, setIsLoading] = useState(false);
     const [isFetching, setIsFetching] = useState(!!id);
     const [professions, setProfessions] = useState<{ label: string; value: string }[]>([]);
@@ -60,12 +65,13 @@ export default function CreateEditPersona({ id }: { id?: string }) {
         handleSubmit,
         formState: { errors },
         reset,
+        setValue,
     } = useForm<PersonaSchema>({
         defaultValues: {
             code: '',
             name: '',
             description: '',
-            professionCode: '',
+            professionCode: professionCodeParam || '',
             baseSystem: '',
             baseStyle: '',
             defaultVoice: 'id-ID-GadisNeural',
@@ -176,7 +182,12 @@ export default function CreateEditPersona({ id }: { id?: string }) {
 
             if (response.ok) {
                 toast.success(`Persona ${isEdit ? 'updated' : 'created'} successfully`);
-                router.push(routes.personaTemplates.dashboard);
+                // If professionCode was passed, go back to that profession's edit page
+                if (professionCodeParam) {
+                    router.back();
+                } else {
+                    router.push(routes.personaTemplates.dashboard);
+                }
             } else {
                 const errorData = await response.json();
                 toast.error(errorData.message || `Failed to ${isEdit ? 'update' : 'create'} persona`);
@@ -190,143 +201,180 @@ export default function CreateEditPersona({ id }: { id?: string }) {
     };
 
     if (isFetching) {
-        return <div>Loading...</div>;
+        return (
+            <div className="flex h-64 items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                    <p>Loading persona details...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="@container">
-            <div className="mb-6 flex items-center justify-between">
-                <Title as="h4" className="font-semibold">
-                    {id ? 'Edit Persona' : 'Create New Persona'}
-                </Title>
-            </div>
-
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Input
-                        label="Code"
-                        placeholder="e.g. CS-GENERAL"
-                        {...register('code')}
-                        error={errors.code?.message}
-                        disabled={!!id}
-                    />
-                    <Input
-                        label="Name"
-                        placeholder="e.g. Customer Service General"
-                        {...register('name')}
-                        error={errors.name?.message}
-                    />
-                </div>
-
-                <Textarea
-                    label="Description"
-                    placeholder="Persona description..."
-                    {...register('description')}
-                    error={errors.description?.message}
-                />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Controller
-                        name="professionCode"
-                        control={control}
-                        render={({ field: { onChange, value } }) => (
-                            <Select
-                                label="Profession"
-                                options={professions}
-                                value={value}
-                                onChange={(selected: any) => onChange(selected.value)}
-                                error={errors.professionCode?.message}
-                                displayValue={(selected) =>
-                                    professions.find((p) => p.value === selected)?.label ?? selected
-                                }
-                            />
-                        )}
-                    />
-                    <Input
-                        label="Default Voice"
-                        placeholder="e.g. id-ID-GadisNeural"
-                        {...register('defaultVoice')}
-                        error={errors.defaultVoice?.message}
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <Textarea
-                        label="Base System"
-                        placeholder="System instructions..."
-                        {...register('baseSystem')}
-                        error={errors.baseSystem?.message}
-                        className="h-full"
-                        textareaClassName="h-32"
-                    />
-                    <Textarea
-                        label="Base Style"
-                        placeholder="Style instructions..."
-                        {...register('baseStyle')}
-                        error={errors.baseStyle?.message}
-                        className="h-full"
-                        textareaClassName="h-32"
-                    />
-                </div>
-
-                <div className="rounded-md border border-gray-200 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <Text className="font-semibold text-gray-900">Base Examples</Text>
-                        <Button size="sm" variant="outline" onClick={() => append({ user: '', assisten: '' })}>
-                            <PiPlusBold className="mr-1" /> Add Example
-                        </Button>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+                {/* Left Column: Welcome Banner */}
+                <div className="xl:col-span-5 2xl:col-span-4">
+                    <div className="sticky top-24">
+                        <PlaygroundBanner className="h-[400px] xl:h-auto" />
+                        <div className="mt-6 hidden xl:block">
+                            <Title as="h3" className="mb-2 text-xl font-bold">
+                                {id ? 'Edit Persona' : 'Create New Persona'}
+                            </Title>
+                            <Text className="text-gray-500">
+                                Configure your AI persona&apos;s personality, knowledge base, and interaction style to create unique conversational experiences.
+                            </Text>
+                        </div>
                     </div>
-                    <div className="space-y-3">
-                        {fields.map((field, index) => (
-                            <div key={field.id} className="flex gap-3 items-start p-3 bg-gray-50 rounded-md">
-                                <div className="flex-1 grid grid-cols-1 gap-3">
-                                    <Input
-                                        label={index === 0 ? "User says" : undefined}
-                                        placeholder="User says..."
-                                        {...register(`baseExamples.${index}.user` as const)}
-                                        error={errors.baseExamples?.[index]?.user?.message}
-                                    />
-                                    <Input
-                                        label={index === 0 ? "Assistant replies" : undefined}
-                                        placeholder="Assistant replies..."
-                                        {...register(`baseExamples.${index}.assisten` as const)}
-                                        error={errors.baseExamples?.[index]?.assisten?.message}
-                                    />
-                                </div>
-                                <ActionIcon
-                                    variant="text"
-                                    color="danger"
-                                    onClick={() => remove(index)}
-                                    className={cn("mt-1", index === 0 && "mt-8")}
-                                >
-                                    <PiTrashBold className="w-5 h-5" />
-                                </ActionIcon>
+                </div>
+
+                {/* Right Column: Form */}
+                <div className="xl:col-span-7 2xl:col-span-8">
+                    <div className="rounded-xl border border-muted bg-white p-6 shadow-sm dark:bg-gray-50">
+                        <div className="mb-6 xl:hidden">
+                            <Title as="h4" className="font-semibold">
+                                {id ? 'Edit Persona' : 'Create New Persona'}
+                            </Title>
+                        </div>
+
+                        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <Input
+                                    label="Code"
+                                    placeholder="e.g. CS-GENERAL"
+                                    {...register('code')}
+                                    error={errors.code?.message}
+                                    disabled={!!id}
+                                    className="col-span-1"
+                                />
+                                <Input
+                                    label="Name"
+                                    placeholder="e.g. Customer Service General"
+                                    {...register('name')}
+                                    error={errors.name?.message}
+                                    className="col-span-1"
+                                />
                             </div>
-                        ))}
+
+                            <Textarea
+                                label="Description"
+                                placeholder="Persona description..."
+                                {...register('description')}
+                                error={errors.description?.message}
+                            />
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <Controller
+                                    name="professionCode"
+                                    control={control}
+                                    render={({ field: { onChange, value } }) => (
+                                        <Select
+                                            label="Profession"
+                                            options={professions}
+                                            value={value}
+                                            onChange={(selected: any) => onChange(selected.value)}
+                                            error={errors.professionCode?.message}
+                                            displayValue={(selected) =>
+                                                professions.find((p) => p.value === selected)?.label ?? selected
+                                            }
+                                            disabled={!!professionCodeParam}
+                                        />
+                                    )}
+                                />
+                                <Input
+                                    label="Default Voice"
+                                    placeholder="e.g. id-ID-GadisNeural"
+                                    {...register('defaultVoice')}
+                                    error={errors.defaultVoice?.message}
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                <Textarea
+                                    label="Base System"
+                                    placeholder="System instructions..."
+                                    {...register('baseSystem')}
+                                    error={errors.baseSystem?.message}
+                                    className="h-full"
+                                    textareaClassName="h-32 font-mono text-sm"
+                                />
+                                <Textarea
+                                    label="Base Style"
+                                    placeholder="Style instructions..."
+                                    {...register('baseStyle')}
+                                    error={errors.baseStyle?.message}
+                                    className="h-full"
+                                    textareaClassName="h-32 font-mono text-sm"
+                                />
+                            </div>
+
+                            <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4 dark:bg-gray-100/10">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <Text className="font-semibold text-gray-900">Base Examples</Text>
+                                        <Text className="text-xs text-gray-500">Provide example interactions to guide the persona</Text>
+                                    </div>
+                                    <Button size="sm" variant="outline" onClick={() => append({ user: '', assisten: '' })}>
+                                        <PiPlusBold className="mr-1" /> Add Example
+                                    </Button>
+                                </div>
+                                <div className="space-y-4">
+                                    {fields.map((field, index) => (
+                                        <div key={field.id} className="relative flex gap-3 items-start p-4 bg-white rounded-lg border border-gray-200 shadow-sm dark:bg-gray-50">
+                                            <div className="flex-1 grid grid-cols-1 gap-3">
+                                                <Input
+                                                    label={index === 0 ? "User says" : undefined}
+                                                    placeholder="User says..."
+                                                    {...register(`baseExamples.${index}.user` as const)}
+                                                    error={errors.baseExamples?.[index]?.user?.message}
+                                                />
+                                                <Input
+                                                    label={index === 0 ? "Assistant replies" : undefined}
+                                                    placeholder="Assistant replies..."
+                                                    {...register(`baseExamples.${index}.assisten` as const)}
+                                                    error={errors.baseExamples?.[index]?.assisten?.message}
+                                                />
+                                            </div>
+                                            <ActionIcon
+                                                variant="text"
+                                                color="danger"
+                                                onClick={() => remove(index)}
+                                                className={cn("absolute top-2 right-2 rounded-full bg-white border-solid border border-red-500", index === 0 && "top-8")}
+                                            >
+                                                <PiTrashBold className="w-4 h-4" />
+                                            </ActionIcon>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                                <Controller
+                                    name="active"
+                                    control={control}
+                                    render={({ field: { value, onChange } }) => (
+                                        <Checkbox
+                                            label="Active Status"
+                                            checked={value}
+                                            onChange={onChange}
+                                            className="font-medium"
+                                        />
+                                    )}
+                                />
+                                <div className="flex gap-3">
+                                    <Button variant="outline" onClick={() => router.back()}>
+                                        Cancel
+                                    </Button>
+                                    <Button type="submit" isLoading={isLoading}>
+                                        {id ? 'Update Persona' : 'Create Persona'}
+                                    </Button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
-
-                <Controller
-                    name="active"
-                    control={control}
-                    render={({ field: { value, onChange } }) => (
-                        <Checkbox
-                            label="Active"
-                            checked={value}
-                            onChange={onChange}
-                        />
-                    )}
-                />
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <Button variant="outline" onClick={() => router.push(routes.personaTemplates.dashboard)}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" isLoading={isLoading}>
-                        {id ? 'Update Persona' : 'Create Persona'}
-                    </Button>
-                </div>
-            </form>
+            </div>
         </div>
     );
 }

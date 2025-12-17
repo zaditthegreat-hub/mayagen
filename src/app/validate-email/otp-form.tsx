@@ -17,7 +17,7 @@ export default function OtpForm() {
     };
 
     const handleSkip = () => {
-        sessionStorage.setItem('skip_email_validation', 'true');
+        localStorage.setItem('skip_email_validation', 'true');
         router.push('/');
     };
 

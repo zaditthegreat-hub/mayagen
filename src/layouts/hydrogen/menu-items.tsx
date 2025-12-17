@@ -84,11 +84,7 @@ export const adminMenuItems = [
     href: routes.professions.dashboard,
     icon: <PiBriefcaseDuotone />,
   },
-  {
-    name: 'Persona Templates',
-    href: routes.personaTemplates.dashboard,
-    icon: <PiUserCircleDuotone />,
-  },
+
   {
     name: 'Tenants',
     href: routes.tenants.dashboard,
@@ -122,11 +118,7 @@ export const tenantMenuItems = [
     href: '/',
     icon: <PiFolderDuotone />,
   },
-  {
-    name: 'Daftar Persona',
-    href: routes.personaTemplates.dashboard,
-    icon: <PiUserCircleDuotone />,
-  },
+
   {
     name: 'Subscriptions',
     href: routes.plans.dashboard,

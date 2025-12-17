@@ -193,11 +193,6 @@ export const routes = {
     create: '/persona-templates/create',
     edit: (id: string) => `/persona-templates/${id}/edit`,
   },
-  personaList: {
-    dashboard: '/persona-list',
-    create: '/persona-list/create',
-    edit: (id: string) => `/persona-list/${id}/edit`,
-  },
   subscriptions: {
     dashboard: '/subscriptions',
   },
