@@ -31,28 +31,50 @@ export default function PlaygroundBannerV2({ className }: { className?: string }
     { id: '1', text: 'Halo! Ada yang bisa saya bantu?', sender: 'assistant' },
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [typingText, setTypingText] = useState('');
+  const [isTypingEffect, setIsTypingEffect] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll chat container (bukan halaman) ke bawah saat ada pesan baru
+  // Auto-scroll chat container ke bawah saat ada pesan baru atau typing
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, typingText]);
 
-
-
+  // Fungsi untuk efek typing
+  const typeMessage = (fullText: string, onComplete: () => void) => {
+    setIsTypingEffect(true);
+    setTypingText('');
+    let index = 0;
+    
+    const typingInterval = setInterval(() => {
+      if (index < fullText.length) {
+        setTypingText(fullText.substring(0, index + 1));
+        index++;
+      } else {
+        clearInterval(typingInterval);
+        setIsTypingEffect(false);
+        setTypingText('');
+        onComplete();
+      }
+    }, 30); // Kecepatan typing: 30ms per karakter
+  };
 
   const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
-    setMessages((prev) => [...prev, { id: Date.now().toString(), text: inputValue, sender: 'user' }]);
+    if (!inputValue.trim() || isTypingEffect) return;
+    
+    const userMessage = inputValue.trim();
+    setMessages((prev) => [...prev, { id: Date.now().toString(), text: userMessage, sender: 'user' }]);
     setInputValue('');
-    setIsTyping(true);
+    
+    // Efek typing untuk respons AI
+    const responseText = 'Terima kasih! Ini respons AI.';
     setTimeout(() => {
-      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: 'Terima kasih! Ini respons AI.', sender: 'assistant' }]);
-      setIsTyping(false);
-    }, 1200);
+      typeMessage(responseText, () => {
+        setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: responseText, sender: 'assistant' }]);
+      });
+    }, 500);
   };
 
   return (
@@ -111,54 +133,51 @@ export default function PlaygroundBannerV2({ className }: { className?: string }
             className="absolute top-12 left-4 bottom-4 w-[50%] z-20 overflow-y-auto"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            <div className="space-y-2">
+            <div className="space-y-3">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={cn(
-                    'text-xs py-1',
+                    'text-[12px] leading-relaxed tracking-wide',
                     msg.sender === 'user'
-                      ? 'text-blue-600 font-medium text-right'
-                      : 'text-gray-600 text-left'
+                      ? 'text-blue-700 font-semibold text-right italic'
+                      : 'text-gray-700 font-normal'
                   )}
                 >
+                  {msg.sender === 'assistant' && <span className="text-blue-500 font-medium">Maya: </span>}
                   {msg.text}
                 </div>
               ))}
-              {isTyping && (
-                <Flex justify="start">
-                  <div className="bg-white/90 rounded-xl px-3 py-2 shadow-sm">
-                    <div className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
-                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                </Flex>
+              {/* Efek typing */}
+              {isTypingEffect && typingText && (
+                <div className="text-[12px] leading-relaxed tracking-wide text-gray-700 font-normal">
+                  <span className="text-blue-500 font-medium">Maya: </span>
+                  {typingText}
+                  <span className="animate-pulse">|</span>
+                </div>
               )}
-
             </div>
           </Box>
 
           {/* Input Chat - KECIL di KANAN BAWAH */}
-         {/* Input Chat - tinggi paling pendek */}
-<div className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 bg-white rounded-full shadow-md px-2.5">
-  <input
-    type="text"
-    value={inputValue}
-    onChange={(e) => setInputValue(e.target.value)}
-    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-    placeholder="Ketik pesan..."
-    className="w-24 text-[11px] text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 bg-transparent border-0 py-1"
-  />
-  <button
-    onClick={handleSendMessage}
-    disabled={!inputValue.trim()}
-    className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none my-0.5"
-  >
-    <PiPaperPlaneRightFill className="size-2.5" />
-  </button>
-</div>
+          <div className="absolute bottom-4 right-4 z-30 flex items-center gap-1.5 bg-white rounded-full shadow-md px-2.5">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Ketik pesan..."
+              className="w-24 text-[11px] text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 bg-transparent border-0 py-1"
+              disabled={isTypingEffect}
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || isTypingEffect}
+              className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors focus:outline-none my-0.5"
+            >
+              <PiPaperPlaneRightFill className="size-2.5" />
+            </button>
+          </div>
         </>
       )}
     </Flex>

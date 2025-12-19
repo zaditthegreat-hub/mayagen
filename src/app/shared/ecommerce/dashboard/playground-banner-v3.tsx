@@ -16,6 +16,7 @@ interface VoiceMessage {
   id: string;
   text: string;
   sender: 'user' | 'assistant';
+  isTyping?: boolean;
 }
 
 export default function PlaygroundBannerV3({ className }: { className?: string }) {
@@ -25,36 +26,66 @@ export default function PlaygroundBannerV3({ className }: { className?: string }
   const [messages, setMessages] = useState<VoiceMessage[]>([
     { id: '1', text: 'Halo! Tekan mikrofon untuk berbicara.', sender: 'assistant' },
   ]);
+  const [typingText, setTypingText] = useState('');
+  const [isTypingEffect, setIsTypingEffect] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll ke bawah saat ada pesan baru
+  // Auto-scroll ke bawah saat ada pesan baru atau typing
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, typingText]);
+
+  // Fungsi untuk efek typing
+  const typeMessage = (fullText: string, onComplete: () => void) => {
+    setIsTypingEffect(true);
+    setTypingText('');
+    let index = 0;
+    
+    const typingInterval = setInterval(() => {
+      if (index < fullText.length) {
+        setTypingText(fullText.substring(0, index + 1));
+        index++;
+      } else {
+        clearInterval(typingInterval);
+        setIsTypingEffect(false);
+        setTypingText('');
+        onComplete();
+      }
+    }, 30); // Kecepatan typing: 30ms per karakter
+  };
 
   const handleStartListening = () => {
     setIsListening(true);
     setTimeout(() => {
       setIsListening(false);
       setMessages((prev) => [...prev, { id: Date.now().toString(), text: 'Halo, apa kabar?', sender: 'user' }]);
+      
+      // Efek typing untuk respons
+      const responseText = 'Saya baik! Ada yang bisa saya bantu?';
       setTimeout(() => {
-        setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: 'Saya baik! Ada yang bisa saya bantu?', sender: 'assistant' }]);
-      }, 2000);
+        typeMessage(responseText, () => {
+          setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: responseText, sender: 'assistant' }]);
+        });
+      }, 500);
     }, 2500);
   };
 
   const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isTypingEffect) return;
     
-    setMessages((prev) => [...prev, { id: Date.now().toString(), text: inputValue.trim(), sender: 'user' }]);
+    const userMessage = inputValue.trim();
+    setMessages((prev) => [...prev, { id: Date.now().toString(), text: userMessage, sender: 'user' }]);
     setInputValue('');
     
-    // Simulate AI response
+    // Efek typing untuk respons AI
+    const responseText = 'Terima kasih atas pesannya!';
     setTimeout(() => {
-      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: 'Terima kasih atas pesannya!', sender: 'assistant' }]);
-    }, 1500);
+      typeMessage(responseText, () => {
+        setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: responseText, sender: 'assistant' }]);
+      });
+    }, 500);
   };
 
   return (
@@ -92,21 +123,30 @@ export default function PlaygroundBannerV3({ className }: { className?: string }
           </button>
 
           {/* Chat Bubbles - dengan scroll */}
-          <div ref={chatContainerRef} className="absolute top-12 left-4 z-20 max-w-[200px] max-h-[180px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-            <div className="space-y-2 pr-1">
+          <div ref={chatContainerRef} className="absolute top-12 left-4 z-20 max-w-[220px] max-h-[180px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="space-y-3 pr-1">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
                   className={cn(
-                    'text-[11px] leading-snug py-1',
+                    'text-[12px] leading-relaxed tracking-wide',
                     msg.sender === 'user'
-                      ? 'text-blue-600 font-medium text-right'
-                      : 'text-gray-600'
+                      ? 'text-blue-700 font-semibold text-right italic'
+                      : 'text-gray-700 font-normal'
                   )}
                 >
+                  {msg.sender === 'assistant' && <span className="text-blue-500 font-medium">Maya: </span>}
                   {msg.text}
                 </div>
               ))}
+              {/* Efek typing */}
+              {isTypingEffect && typingText && (
+                <div className="text-[12px] leading-relaxed tracking-wide text-gray-700 font-normal">
+                  <span className="text-blue-500 font-medium">Maya: </span>
+                  {typingText}
+                  <span className="animate-pulse">|</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -119,21 +159,24 @@ export default function PlaygroundBannerV3({ className }: { className?: string }
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               placeholder="Ketik pesan..."
               className="w-28 text-[10px] text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 bg-transparent border-0 py-1"
+              disabled={isTypingEffect}
             />
             <button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || isTypingEffect}
               className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white hover:from-blue-600 hover:to-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all focus:outline-none shadow-sm"
             >
               <PiPaperPlaneRightFill className="size-2.5" />
             </button>
             <button
               onClick={isListening ? () => setIsListening(false) : handleStartListening}
+              disabled={isTypingEffect}
               className={cn(
                 "w-5 h-5 rounded-full flex items-center justify-center transition-all focus:outline-none shadow-sm",
                 isListening 
                   ? "bg-gradient-to-r from-red-500 to-red-600 text-white" 
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-500",
+                isTypingEffect && "opacity-40 cursor-not-allowed"
               )}
             >
               {isListening ? (
@@ -159,7 +202,6 @@ export default function PlaygroundBannerV3({ className }: { className?: string }
 
       {/* Avatar - TETAP DI KANAN dengan transisi smooth ke video */}
       <div className="absolute -bottom-4 right-4 z-10">
-
         
         {/* Container untuk smooth transition antara image dan video */}
         <div className="relative">
