@@ -32,11 +32,17 @@ export default function PlaygroundBannerV2({ className }: { className?: string }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll chat container (bukan halaman) ke bawah saat ada pesan baru
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
+
+
+
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -91,26 +97,33 @@ export default function PlaygroundBannerV2({ className }: { className?: string }
       {/* DUPLIKAT-V2: Chat TRANSPARAN - bubble langsung di banner */}
       {isChatOpen && (
         <>
+          {/* Button Kembali - kiri atas */}
+          <button
+            onClick={() => setIsChatOpen(false)}
+            className="absolute top-3 left-3 z-30 px-3 py-1.5 rounded-lg bg-white/80 hover:bg-white border border-gray-200 text-gray-600 hover:text-gray-800 text-[10px] font-medium transition-all shadow-sm"
+          >
+            ← Kembali
+          </button>
+
           {/* Chat Messages - TRANSPARAN tanpa background */}
           <Box 
-            className="absolute top-4 left-4 bottom-4 w-[50%] z-20 overflow-y-auto"
+            ref={chatContainerRef}
+            className="absolute top-12 left-4 bottom-4 w-[50%] z-20 overflow-y-auto"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            onClick={() => setIsChatOpen(false)}
           >
             <div className="space-y-2">
               {messages.map((msg) => (
-                <Flex key={msg.id} justify={msg.sender === 'user' ? 'end' : 'start'}>
-                  <div
-                    className={cn(
-                      'max-w-[90%] rounded-xl px-3 py-2',
-                      msg.sender === 'user'
-                        ? 'bg-blue-500 text-white shadow-sm'
-                        : 'bg-white/90 text-gray-700 shadow-sm'
-                    )}
-                  >
-                    <span className="text-xs">{msg.text}</span>
-                  </div>
-                </Flex>
+                <div
+                  key={msg.id}
+                  className={cn(
+                    'text-xs py-1',
+                    msg.sender === 'user'
+                      ? 'text-blue-600 font-medium text-right'
+                      : 'text-gray-600 text-left'
+                  )}
+                >
+                  {msg.text}
+                </div>
               ))}
               {isTyping && (
                 <Flex justify="start">
@@ -123,7 +136,7 @@ export default function PlaygroundBannerV2({ className }: { className?: string }
                   </div>
                 </Flex>
               )}
-              <div ref={messagesEndRef} />
+
             </div>
           </Box>
 
