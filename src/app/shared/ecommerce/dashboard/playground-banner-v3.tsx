@@ -1,395 +1,195 @@
 // ============================================================================
 // DUPLIKAT-V3: Voice Avatar Version
-// File ini adalah duplikat dari create-edit-persona.tsx
 // Dibuat: 2025-12-18
-// Deskripsi: Form persona dengan PlaygroundBannerV3 (voice avatar dengan animasi)
-// Untuk menghapus: Hapus file ini dan route terkait
+// Deskripsi: Banner dengan voice - avatar TETAP DI KANAN, hanya membesar
+// Update: Chat bubbles di kiri atas, chat input di kiri bawah, video saat aktif
 // ============================================================================
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { SubmitHandler, Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Input, Button, Title, Text, Checkbox, Textarea, Select, ActionIcon } from 'rizzui';
-import { PiPlusBold, PiTrashBold } from 'react-icons/pi';
-import toast from 'react-hot-toast';
-import { z } from 'zod';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { routes } from '@/config/routes';
+import Image from 'next/image';
+import { useState, useRef, useEffect } from 'react';
+import { PiMicrophoneFill, PiMicrophoneSlashFill, PiPaperPlaneRightFill } from 'react-icons/pi';
 import cn from '@core/utils/class-names';
 
-// DUPLIKAT-V3: Import banner versi voice avatar
-import PlaygroundBannerV3 from './playground-banner-v3';
+interface VoiceMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'assistant';
+}
 
-// Define the persona type based on the API response
-export type Persona = {
-    id?: string;
-    code: string;
-    name: string;
-    description: string | null;
-    professionCode: string;
-    professionName?: string;
-    baseSystem: string;
-    baseStyle: string;
-    baseExamples: { user: string; assisten: string }[];
-    defaultVoice: string;
-    active: boolean;
-};
+export default function PlaygroundBannerV3({ className }: { className?: string }) {
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [messages, setMessages] = useState<VoiceMessage[]>([
+    { id: '1', text: 'Halo! Tekan mikrofon untuk berbicara.', sender: 'assistant' },
+  ]);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-// Zod schema for validation
-const personaSchema = z.object({
-    code: z.string().min(1, 'Code is required'),
-    name: z.string().min(1, 'Name is required'),
-    description: z.string().optional(),
-    professionCode: z.string().min(1, 'Profession Code is required'),
-    baseSystem: z.string().min(1, 'Base System is required'),
-    baseStyle: z.string().min(1, 'Base Style is required'),
-    defaultVoice: z.string().min(1, 'Default Voice is required'),
-    active: z.boolean(),
-    baseExamples: z.array(
-        z.object({
-            user: z.string().min(1, 'User input is required'),
-            assisten: z.string().min(1, 'Assistant response is required'),
-        })
-    ),
-});
-
-type PersonaSchema = z.infer<typeof personaSchema>;
-
-// DUPLIKAT-V3: Component name changed
-export default function CreateEditPersonaV3({ id }: { id?: string }) {
-    const { data: session } = useSession();
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const professionCodeParam = searchParams.get('professionCode');
-
-    const [isLoading, setIsLoading] = useState(false);
-    const [isFetching, setIsFetching] = useState(!!id);
-    const [professions, setProfessions] = useState<{ label: string; value: string }[]>([]);
-    const [personaData, setPersonaData] = useState<Persona | undefined>(undefined);
-
-    const {
-        register,
-        control,
-        handleSubmit,
-        formState: { errors },
-        reset,
-        setValue,
-    } = useForm<PersonaSchema>({
-        defaultValues: {
-            code: '',
-            name: '',
-            description: '',
-            professionCode: professionCodeParam || '',
-            baseSystem: '',
-            baseStyle: '',
-            defaultVoice: 'id-ID-GadisNeural',
-            active: true,
-            baseExamples: [{ user: '', assisten: '' }],
-        },
-    });
-
-    const { fields, append, remove } = useFieldArray({
-        control,
-        name: 'baseExamples',
-    });
-
-    // Fetch professions
-    useEffect(() => {
-        const fetchProfessions = async () => {
-            if (session?.accessToken) {
-                try {
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-                    const response = await fetch(`${apiUrl}/api/v1/admin/professions`, {
-                        headers: {
-                            Authorization: `Bearer ${session.accessToken}`,
-                        },
-                    });
-                    if (response.ok) {
-                        const result = await response.json();
-                        setProfessions(result.map((p: any) => ({ label: `${p.name} (${p.code})`, value: p.code })));
-                    }
-                } catch (error) {
-                    console.error('Error fetching professions:', error);
-                }
-            }
-        };
-        fetchProfessions();
-    }, [session]);
-
-    // Fetch persona data if id is provided
-    useEffect(() => {
-        const fetchPersona = async () => {
-            if (id && session?.accessToken) {
-                setIsFetching(true);
-                try {
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-                    // Fetch all personas and filter by ID since there is no get-by-id endpoint
-                    const response = await fetch(`${apiUrl}/api/v1/admin/persona-templates`, {
-                        headers: {
-                            Authorization: `Bearer ${session.accessToken}`,
-                        },
-                    });
-
-                    if (response.ok) {
-                        const result = await response.json();
-                        // Result is an array of personas
-                        const persona = Array.isArray(result) ? result.find((p: any) => p.id === id) : null;
-
-                        if (persona) {
-                            setPersonaData(persona);
-                            reset({
-                                code: persona.code,
-                                name: persona.name,
-                                description: persona.description || '',
-                                professionCode: persona.professionCode,
-                                baseSystem: persona.baseSystem,
-                                baseStyle: persona.baseStyle,
-                                defaultVoice: persona.defaultVoice,
-                                active: persona.active,
-                                baseExamples: persona.baseExamples && persona.baseExamples.length > 0 ? persona.baseExamples : [{ user: '', assisten: '' }],
-                            });
-                        } else {
-                            toast.error('Persona not found');
-                            router.push(routes.personaTemplates.dashboard);
-                        }
-                    } else {
-                        toast.error('Failed to fetch persona details');
-                    }
-                } catch (error) {
-                    console.error('Error fetching persona:', error);
-                    toast.error('Error loading persona');
-                } finally {
-                    setIsFetching(false);
-                }
-            } else {
-                setIsFetching(false);
-            }
-        };
-        fetchPersona();
-    }, [id, session, reset, router]);
-
-
-    const onSubmit: SubmitHandler<PersonaSchema> = async (data) => {
-        setIsLoading(true);
-        try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-            const isEdit = !!id;
-            const url = isEdit
-                ? `${apiUrl}/api/v1/admin/persona-templates/${id}`
-                : `${apiUrl}/api/v1/admin/persona-templates`;
-            const method = isEdit ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${session?.accessToken}`,
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (response.ok) {
-                toast.success(`Persona ${isEdit ? 'updated' : 'created'} successfully`);
-                // If professionCode was passed, go back to that profession's edit page
-                if (professionCodeParam) {
-                    router.back();
-                } else {
-                    router.push(routes.personaTemplates.dashboard);
-                }
-            } else {
-                const errorData = await response.json();
-                toast.error(errorData.message || `Failed to ${isEdit ? 'update' : 'create'} persona`);
-            }
-        } catch (error) {
-            console.error('Error saving persona:', error);
-            toast.error('Something went wrong');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    if (isFetching) {
-        return (
-            <div className="flex h-64 items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
-                    <p>Loading persona details...</p>
-                </div>
-            </div>
-        );
+  // Auto-scroll ke bawah saat ada pesan baru
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
+  }, [messages]);
 
-    return (
-        <div className="@container">
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-                {/* Left Column: Welcome Banner */}
-                <div className="xl:col-span-5 2xl:col-span-4">
-                    <div className="sticky top-24">
-                        {/* DUPLIKAT-V3: Menggunakan PlaygroundBannerV3 */}
-                        <PlaygroundBannerV3 className="h-[400px] xl:h-auto" />
-                        <div className="mt-6 hidden xl:block">
-                            <Title as="h3" className="mb-2 text-xl font-bold">
-                                {id ? 'Edit Persona' : 'Create New Persona'}
-                            </Title>
-                            <Text className="text-gray-500">
-                                Configure your AI persona&apos;s personality, knowledge base, and interaction style to create unique conversational experiences.
-                            </Text>
-                            {/* DUPLIKAT-V3: Label untuk versi voice avatar */}
-                            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                                <span>🎤</span> Voice Avatar Mode
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  const handleStartListening = () => {
+    setIsListening(true);
+    setTimeout(() => {
+      setIsListening(false);
+      setMessages((prev) => [...prev, { id: Date.now().toString(), text: 'Halo, apa kabar?', sender: 'user' }]);
+      setTimeout(() => {
+        setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: 'Saya baik! Ada yang bisa saya bantu?', sender: 'assistant' }]);
+      }, 2000);
+    }, 2500);
+  };
 
-                {/* Right Column: Form */}
-                <div className="xl:col-span-7 2xl:col-span-8">
-                    <div className="rounded-xl border border-muted bg-white p-6 shadow-sm dark:bg-gray-50">
-                        <div className="mb-6 xl:hidden">
-                            <Title as="h4" className="font-semibold">
-                                {id ? 'Edit Persona' : 'Create New Persona'}
-                            </Title>
-                        </div>
+  const handleSendMessage = () => {
+    if (!inputValue.trim()) return;
+    
+    setMessages((prev) => [...prev, { id: Date.now().toString(), text: inputValue.trim(), sender: 'user' }]);
+    setInputValue('');
+    
+    // Simulate AI response
+    setTimeout(() => {
+      setMessages((prev) => [...prev, { id: (Date.now() + 1).toString(), text: 'Terima kasih atas pesannya!', sender: 'assistant' }]);
+    }, 1500);
+  };
 
-                        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-y-6">
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <Input
-                                    label="Code"
-                                    placeholder="e.g. CS-GENERAL"
-                                    {...register('code')}
-                                    error={errors.code?.message}
-                                    disabled={!!id}
-                                    className="col-span-1"
-                                />
-                                <Input
-                                    label="Name"
-                                    placeholder="e.g. Customer Service General"
-                                    {...register('name')}
-                                    error={errors.name?.message}
-                                    className="col-span-1"
-                                />
-                            </div>
-
-                            <Textarea
-                                label="Description"
-                                placeholder="Persona description..."
-                                {...register('description')}
-                                error={errors.description?.message}
-                            />
-
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <Controller
-                                    name="professionCode"
-                                    control={control}
-                                    render={({ field: { onChange, value } }) => (
-                                        <Select
-                                            label="Profession"
-                                            options={professions}
-                                            value={value}
-                                            onChange={(selected: any) => onChange(selected.value)}
-                                            error={errors.professionCode?.message}
-                                            displayValue={(selected) =>
-                                                professions.find((p) => p.value === selected)?.label ?? selected
-                                            }
-                                            disabled={!!professionCodeParam}
-                                        />
-                                    )}
-                                />
-                                <Input
-                                    label="Default Voice"
-                                    placeholder="e.g. id-ID-GadisNeural"
-                                    {...register('defaultVoice')}
-                                    error={errors.defaultVoice?.message}
-                                />
-                            </div>
-
-                            <div className="space-y-4">
-                                <Textarea
-                                    label="Base System"
-                                    placeholder="System instructions..."
-                                    {...register('baseSystem')}
-                                    error={errors.baseSystem?.message}
-                                    className="h-full"
-                                    textareaClassName="h-32 font-mono text-sm"
-                                />
-                                <Textarea
-                                    label="Base Style"
-                                    placeholder="Style instructions..."
-                                    {...register('baseStyle')}
-                                    error={errors.baseStyle?.message}
-                                    className="h-full"
-                                    textareaClassName="h-32 font-mono text-sm"
-                                />
-                            </div>
-
-                            <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-4 dark:bg-gray-100/10">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <Text className="font-semibold text-gray-900">Base Examples</Text>
-                                        <Text className="text-xs text-gray-500">Provide example interactions to guide the persona</Text>
-                                    </div>
-                                    <Button size="sm" variant="outline" onClick={() => append({ user: '', assisten: '' })}>
-                                        <PiPlusBold className="mr-1" /> Add Example
-                                    </Button>
-                                </div>
-                                <div className="space-y-4">
-                                    {fields.map((field, index) => (
-                                        <div key={field.id} className="relative flex gap-3 items-start p-4 bg-white rounded-lg border border-gray-200 shadow-sm dark:bg-gray-50">
-                                            <div className="flex-1 grid grid-cols-1 gap-3">
-                                                <Input
-                                                    label={index === 0 ? "User says" : undefined}
-                                                    placeholder="User says..."
-                                                    {...register(`baseExamples.${index}.user` as const)}
-                                                    error={errors.baseExamples?.[index]?.user?.message}
-                                                />
-                                                <Input
-                                                    label={index === 0 ? "Assistant replies" : undefined}
-                                                    placeholder="Assistant replies..."
-                                                    {...register(`baseExamples.${index}.assisten` as const)}
-                                                    error={errors.baseExamples?.[index]?.assisten?.message}
-                                                />
-                                            </div>
-                                            <ActionIcon
-                                                variant="text"
-                                                color="danger"
-                                                onClick={() => remove(index)}
-                                                className={cn("absolute top-2 right-2 rounded-full bg-white border-solid border border-red-500", index === 0 && "top-8")}
-                                            >
-                                                <PiTrashBold className="w-4 h-4" />
-                                            </ActionIcon>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <Controller
-                                    name="active"
-                                    control={control}
-                                    render={({ field: { value, onChange } }) => (
-                                        <Checkbox
-                                            label="Active Status"
-                                            checked={value}
-                                            onChange={onChange}
-                                            className="font-medium"
-                                        />
-                                    )}
-                                />
-                                <div className="flex gap-3">
-                                    <Button variant="outline" onClick={() => router.back()}>
-                                        Cancel
-                                    </Button>
-                                    <Button type="submit" isLoading={isLoading}>
-                                        {id ? 'Update Persona' : 'Create Persona'}
-                                    </Button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+  return (
+    <div className={cn(
+      "relative overflow-hidden rounded-xl bg-[#e3e3e3] dark:bg-gray-800",
+      "min-h-[300px]",
+      className
+    )}>
+      
+      {/* Mode Normal */}
+      {!isVoiceOpen && (
+        <div className="max-w-md p-8 space-y-4">
+          <p className="text-xs text-gray-600 dark:text-gray-400">Playground Preview</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Coba Dan Uji Persona AI.</h1>
+          <p className="text-sm text-gray-700 dark:text-gray-300">Berbicara langsung dengan AI menggunakan suara Anda.</p>
+          <button 
+            onClick={() => setIsVoiceOpen(true)}
+            className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 font-medium transition-colors"
+          >
+            <PiMicrophoneFill className="w-5 h-5" />
+            <span>Mulai Voice Chat</span>
+          </button>
         </div>
-    );
+      )}
+
+      {/* Mode Voice Active */}
+      {isVoiceOpen && (
+        <>
+          {/* Close Button - kiri atas */}
+          <button
+            onClick={() => setIsVoiceOpen(false)}
+            className="absolute top-3 left-3 z-30 px-3 py-1.5 rounded-lg bg-white/80 hover:bg-white border border-gray-200 text-gray-600 hover:text-gray-800 text-[10px] font-medium transition-all shadow-sm"
+          >
+            ← Kembali
+          </button>
+
+          {/* Chat Bubbles - dengan scroll */}
+          <div ref={chatContainerRef} className="absolute top-12 left-4 z-20 max-w-[200px] max-h-[180px] overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className="space-y-2 pr-1">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={cn(
+                    'text-[11px] leading-snug py-1',
+                    msg.sender === 'user'
+                      ? 'text-blue-600 font-medium text-right'
+                      : 'text-gray-600'
+                  )}
+                >
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Chat Input - kiri bawah dengan mic di kanan send */}
+          <div className="absolute bottom-4 left-4 z-30 flex items-center gap-1.5 bg-white rounded-full shadow-md px-2.5 py-1">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              placeholder="Ketik pesan..."
+              className="w-28 text-[10px] text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-0 bg-transparent border-0 py-1"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim()}
+              className="w-5 h-5 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white hover:from-blue-600 hover:to-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all focus:outline-none shadow-sm"
+            >
+              <PiPaperPlaneRightFill className="size-2.5" />
+            </button>
+            <button
+              onClick={isListening ? () => setIsListening(false) : handleStartListening}
+              className={cn(
+                "w-5 h-5 rounded-full flex items-center justify-center transition-all focus:outline-none shadow-sm",
+                isListening 
+                  ? "bg-gradient-to-r from-red-500 to-red-600 text-white" 
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-500"
+              )}
+            >
+              {isListening ? (
+                <PiMicrophoneSlashFill className="size-2.5" />
+              ) : (
+                <PiMicrophoneFill className="size-2.5" />
+              )}
+            </button>
+          </div>
+
+          {/* Status indicator - di bawah kiri dekat input */}
+          {isListening && (
+            <div className="absolute bottom-16 left-4 z-20 flex items-center gap-2 text-blue-600 text-[10px] font-medium">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              <span>Mendengarkan...</span>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Avatar - TETAP DI KANAN dengan transisi smooth ke video */}
+      <div className="absolute -bottom-4 right-4 z-10">
+
+        
+        {/* Container untuk smooth transition antara image dan video */}
+        <div className="relative">
+          {/* Static Image - fade out saat voice open */}
+          <Image
+            src="/maya.webp"
+            alt="AI Avatar"
+            width={666}
+            height={720}
+            priority
+            className={cn(
+              "relative transition-all duration-700 ease-out object-contain",
+              isVoiceOpen ? 'h-72 w-auto opacity-0 scale-105' : 'h-44 w-auto opacity-100 scale-100'
+            )}
+          />
+          
+          {/* Video - tanpa animasi scale */}
+          <video
+            src="/avatar-maya.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className={cn(
+              "absolute bottom-0 right-0 transition-all duration-500 ease-out object-contain",
+              isVoiceOpen ? 'h-72 w-auto opacity-100' : 'h-44 w-auto opacity-0 scale-95 pointer-events-none'
+            )}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
